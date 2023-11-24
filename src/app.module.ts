@@ -15,6 +15,12 @@ import { ProfileController } from './profile/profile.controller';
 import { PengaduanController } from './pengaduan/pengaduan.controller';
 import { PengaduanService } from './pengaduan/pengaduan.service';
 import { Pengaduanschema } from './schema/pengaduan.schema';
+import { ProfilepetugasController } from './profilepetugas/profilepetugas.controller';
+import { ProfilepetugasService } from './profilepetugas/profilepetugas.service';
+import { ProfilepetugasSchema } from './schema/profilepetugas.schema';
+import { TanggapanController } from './tanggapan/tanggapan.controller';
+import { TanggapanService } from './tanggapan/tanggapan.service';
+import { TanggapanSchema } from './schema/tanggapan.schema';
 
 
 @Module({
@@ -37,9 +43,11 @@ import { Pengaduanschema } from './schema/pengaduan.schema';
     MongooseModule.forFeature([{name: 'User', schema: UserSchema}]),
     MongooseModule.forFeature([{name: 'Profile', schema: ProfileSchema}]),
     MongooseModule.forFeature([{name: 'Pengaduan', schema: Pengaduanschema}]),
+    MongooseModule.forFeature([{name: 'Profilepetugas', schema: ProfilepetugasSchema}]),
+    MongooseModule.forFeature([{name: 'Tanggapan', schema: TanggapanSchema}]),
   ],
-  controllers: [AppController, AuthController, ProfileController, PengaduanController],
-  providers: [AppService, AuthService, JwtStrategy, ProfileService, PengaduanService],
+  controllers: [AppController, AuthController, ProfileController, PengaduanController, ProfilepetugasController, TanggapanController],
+  providers: [AppService, AuthService, JwtStrategy, ProfileService, PengaduanService, ProfilepetugasService, TanggapanService],
   exports: [JwtStrategy, PassportModule],
 })
 export class AppModule {}

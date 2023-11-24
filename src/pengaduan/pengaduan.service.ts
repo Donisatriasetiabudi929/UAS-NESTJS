@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import * as Minio from 'minio';
 import { Redis } from 'ioredis';
 import { ConfigService } from '@nestjs/config';
@@ -98,6 +98,19 @@ export class PengaduanService {
         return this.profileModel.findOne({ id_user }).exec();
     }
 
+    async getPengaduanByIdAuth(id_user: string): Promise<IPengaduan> {
+
+        const tampil = await this.pengaduanModel.findOne({ id_user }).exec();
+        return tampil;
+    }
+
+    async getPengaduanByRole(jenis_pengaduan: string): Promise<IPengaduan[]> {
+        const pengaduans = await this.pengaduanModel.find({ jenis_pengaduan }).exec();
+        return pengaduans;
+    }
+    
+
+
     async createUploud(
         id_user: string,
         id_profile: string,
@@ -106,6 +119,7 @@ export class PengaduanService {
         notelpon: string,
         alamat: string,
         tanggal_pengaduan: string,
+        jenis_pengaduan: string,
         isi_laporan: string,
         namaFiles: string[],
         status: string
@@ -122,12 +136,29 @@ export class PengaduanService {
             notelpon,
             alamat,
             tanggal_pengaduan: waktu,
+            jenis_pengaduan,
             isi_laporan,
             files: namaFiles,
-            status: "Waiting"
+            status: "Belum Ditanggapi"
         });
 
-        await this.deleteCache(`002`);
+        await this.deleteCache(`003`);
         return newUploud.save();
+    }
+
+    async getAllPengaduan(): Promise<IPengaduan[]> {
+        const cachedData = await this.Redisclient.get('003');
+
+        if (cachedData) {
+            return JSON.parse(cachedData);
+        } else {
+            const pengaduan = await this.pengaduanModel.find();
+            if (!pengaduan || pengaduan.length === 0) {
+                throw new NotFoundException('Data pengaduan tidak ada!');
+            }
+
+            await this.Redisclient.setex('003', 3600, JSON.stringify(pengaduan));
+            return pengaduan;
+        }
     }
 }

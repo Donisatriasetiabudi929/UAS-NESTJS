@@ -28,6 +28,9 @@ export class Pengaduan {
     tanggal_pengaduan: string;
 
     @Prop()
+    jenis_pengaduan: string;
+
+    @Prop()
     isi_laporan: string;
 
     @Prop([String])

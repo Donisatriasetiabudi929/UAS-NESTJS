@@ -6,19 +6,20 @@ import { UpdateUserDto } from 'src/dto/update-user.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { BadRequestException } from '@nestjs/common';
 
-
 @Controller('auth')
 export class AuthController {
     constructor(private authService: AuthService) { }
 
-    //Untuk menangani permintaan HTTP POST
     @Post('/signup')
     signUp(@Body() signUpDto: SignUpDto): Promise<{ token: string }> {
         return this.authService.signUp(signUpDto);
     }
 
-
-
+    @Post('/signuppetugas')
+    @UseGuards(AuthGuard())
+    signUpPetugas(@Body() signUpDto: SignUpDto): Promise<{ token: string }> {
+        return this.authService.signUpPetugas(signUpDto);
+    }
 
     @Get('/all')
     async getUplouds(@Res() Response) {
@@ -49,14 +50,10 @@ export class AuthController {
         }
     }
 
-
-
-    //Untuk menangani permintaan HTTP GET
     @Post('/login')
     login(@Body() loginDto: LoginDto): Promise<{ token: string }> {
         return this.authService.login(loginDto);
     }
-
 
     @Get('/:id')
     async getUserById(@Param('id') id: string, @Res() Response) {

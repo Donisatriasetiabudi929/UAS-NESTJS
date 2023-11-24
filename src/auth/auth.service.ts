@@ -13,8 +13,6 @@ import { IProfile } from 'src/interface/profile.interface';
 import * as Minio from 'minio';
 import { ConfigService } from '@nestjs/config';
 
-
-
 @Injectable()
 export class AuthService {
     private readonly Redisclient: Redis;
@@ -30,7 +28,6 @@ export class AuthService {
             host: '127.0.0.1',
             password: '',
             username: '',
-            //Optional
             db: 1
         });
         this.minioClient = new Minio.Client({
@@ -115,7 +112,27 @@ export class AuthService {
             password: hashedPassword,
             role: 'Masyarakat',
         });
-        const token = this.jwtService.sign({ id: user._id });
+        const token = this.jwtService.sign({ id: user._id, role: user.role });
+        await this.updateCache();
+        return { token };
+    }
+
+    async signUpPetugas(signUpDto: SignUpDto): Promise<{ token: string }> {
+        const { name, password, confirmPassword, role } = signUpDto;
+        if (password !== confirmPassword) {
+            throw new BadRequestException('Password dan konfirmasi password tidak cocok');
+        }
+        const existingUser = await this.userModel.findOne({ name });
+        if (existingUser) {
+            throw new NotFoundException('Data dengan name yang anda input, sudah terdaftar!!!');
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = await this.userModel.create({
+            name,
+            password: hashedPassword,
+            role
+        });
+        const token = this.jwtService.sign({ id: user._id, role: user.role });
         await this.updateCache();
         return { token };
     }
@@ -171,10 +188,6 @@ export class AuthService {
         return existingUser;
     }
 
-
-
-
-    //Untuk proses login
     async login(loginDto: LoginDto): Promise<{ token: string }> {
         const { name, password } = loginDto;
         const user = await this.userModel.findOne({ name });
@@ -185,7 +198,7 @@ export class AuthService {
         if (!isPasswordMatched) {
             throw new UnauthorizedException('Invalid email or password');
         }
-        const token = this.jwtService.sign({ id: user._id });
+        const token = this.jwtService.sign({ id: user._id, role: user.role });
         return { token };
     }
 

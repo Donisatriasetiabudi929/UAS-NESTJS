@@ -25,6 +25,10 @@ export class CreatePengaduanDto {
 
     @IsString()
     @IsNotEmpty()
+    readonly jenis_pengaduan: string;
+
+    @IsString()
+    @IsNotEmpty()
     readonly isi_laporan: string;
 
     readonly files: Express.Multer.File;
