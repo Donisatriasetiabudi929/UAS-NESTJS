@@ -98,11 +98,15 @@ export class PengaduanService {
         return this.profileModel.findOne({ id_user }).exec();
     }
 
-    async getPengaduanByIdAuth(id_user: string): Promise<IPengaduan> {
-
-        const tampil = await this.pengaduanModel.findOne({ id_user }).exec();
+    async getPengaduanByIdAuth(id_user: string): Promise<IPengaduan[]> {
+        const tampil = await this.pengaduanModel
+            .find({ id_user })
+            .sort({ tanggal_pengaduan: -1 }) 
+            .exec();
+    
         return tampil;
     }
+    
 
     async getPengaduanByRole(jenis_pengaduan: string): Promise<IPengaduan[]> {
         const pengaduans = await this.pengaduanModel.find({ jenis_pengaduan }).exec();
