@@ -156,7 +156,7 @@ export class PengaduanService {
         if (cachedData) {
             return JSON.parse(cachedData);
         } else {
-            const pengaduan = await this.pengaduanModel.find();
+            const pengaduan = await this.pengaduanModel.find().sort({ tanggal_pengaduan: -1 });
             if (!pengaduan || pengaduan.length === 0) {
                 throw new NotFoundException('Data pengaduan tidak ada!');
             }
@@ -164,5 +164,14 @@ export class PengaduanService {
             await this.Redisclient.setex('003', 3600, JSON.stringify(pengaduan));
             return pengaduan;
         }
+        
+    }
+
+    async getPengaduan(pengaduanId:string):Promise<IPengaduan>{
+        const existingPengaduan = await this.pengaduanModel.findById(pengaduanId)
+        if (!existingPengaduan){
+            throw new NotFoundException(`Pengaduan dengan #${pengaduanId} tidak tersedia`);
+        }
+        return existingPengaduan;
     }
 }

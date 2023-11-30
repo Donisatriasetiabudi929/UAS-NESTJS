@@ -28,7 +28,7 @@ export class AuthService {
             host: '127.0.0.1',
             password: '',
             username: '',
-            db: 1
+            db: 2
         });
         this.minioClient = new Minio.Client({
             endPoint: '127.0.0.1',
@@ -59,11 +59,11 @@ export class AuthService {
 
     async getAllUser(): Promise<IUser[]> {
         const cachedData = await this.Redisclient.get('005');
-
+    
         if (cachedData) {
             return JSON.parse(cachedData);
         } else {
-            const userData = await this.userModel.find()
+            const userData = await this.userModel.find({ role: { $ne: 'Masyarakat' } }); 
             if (!userData || userData.length == 0) {
                 throw new NotFoundException('Data user tidak ada!');
             }
@@ -71,6 +71,7 @@ export class AuthService {
             return userData;
         }
     }
+    
 
     async updateCache(): Promise<void> {
         try {
@@ -133,7 +134,7 @@ export class AuthService {
             role
         });
         const token = this.jwtService.sign({ id: user._id, role: user.role });
-        await this.updateCache();
+        await this.deleteCache('005');
         return { token };
     }
 
@@ -188,19 +189,25 @@ export class AuthService {
         return existingUser;
     }
 
-    async login(loginDto: LoginDto): Promise<{ token: string }> {
+    async login(loginDto: LoginDto): Promise<{ token: string, role: string }> {
         const { name, password } = loginDto;
         const user = await this.userModel.findOne({ name });
+        
         if (!user) {
             throw new UnauthorizedException('Invalid email or password');
         }
+        
         const isPasswordMatched = await bcrypt.compare(password, user.password);
+        
         if (!isPasswordMatched) {
             throw new UnauthorizedException('Invalid email or password');
         }
+        
         const token = this.jwtService.sign({ id: user._id, role: user.role });
-        return { token };
+        
+        return { token, role: user.role };
     }
+    
 
     async deleteUser(userId: string): Promise<IUser> {
         const deletedUser = await this.userModel.findByIdAndDelete(userId);

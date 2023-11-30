@@ -185,11 +185,8 @@ export class ProfilepetugasService {
         if (!updatedUploud) {
             throw new NotFoundException(`Profil dengan ID ${uploudId} tidak ditemukan`);
         }
-        const tanggapan = await this.tanggapanModel.find({id_profile: uploudId});
-        const tanggapans = tanggapan[0];
-        const pengaduan = await this.pengaduanModel.findById(tanggapans.id_pengaduan);
+        
         await this.updateCache();
-        await this.deleteCache(`004:${pengaduan.id}`);
         return updatedUploud;
     }
 

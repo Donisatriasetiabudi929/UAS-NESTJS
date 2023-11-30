@@ -146,14 +146,37 @@ export class PengaduanController {
     }
 
     @Get('/all')
-    async getUplouds(@Res() Response) {
+    async getUplouds() {
         try {
             const pengaduanData = await this.pengaduanService.getAllPengaduan();
+            if (!pengaduanData || pengaduanData.length === 0) {
+                return { message: 'Pengaduan tidak ditemukan' };
+            }
+
+            return pengaduanData;
+        } catch (err) {
+            throw new Error('Terjadi kesalahan saat mengambil profil');
+        }
+    }
+    @Get('/getbyid/:id')
+    async getPengaduanById(@Param('id') id: string, @Res() Response) {
+        try {
+            const pengaduan = await this.pengaduanService.getPengaduan(id);
+
+            if (!pengaduan) {
+                return Response.status(HttpStatus.NOT_FOUND).json({
+                    message: 'Data pengaduan tidak ditemukan'
+                });
+            }
+
             return Response.status(HttpStatus.OK).json({
-                message: 'Semua data pengaduan berhasil di temukan', pengaduanData
+                message: 'Data pengaduan berhasil ditemukan',
+                pengaduan
             });
         } catch (err) {
-            return Response.status(err.status).json(err.Response);
+            return Response.status(err.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
+                message: 'Terjadi kesalahan saat mengambil data pengaduan'
+            });
         }
     }
 

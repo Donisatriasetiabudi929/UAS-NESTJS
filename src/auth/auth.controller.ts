@@ -22,16 +22,18 @@ export class AuthController {
     }
 
     @Get('/all')
-    async getUplouds(@Res() Response) {
-        try {
-            const userData = await this.authService.getAllUser();
-            return Response.status(HttpStatus.OK).json({
-                message: 'Semua data user berhasil di temukan', userData
-            });
-        } catch (err) {
-            return Response.status(err.status).json(err.Response);
-        }
+async getUplouds(@Res() Response) {
+    try {
+        const userData = await this.authService.getAllUser();
+        return Response.status(HttpStatus.OK).json({
+            message: 'Semua data user berhasil ditemukan',
+            userData
+        });
+    } catch (err) {
+        return Response.status(err.status).json(err.Response);
     }
+}
+
 
     @Put('/:id')
     @UseGuards(AuthGuard())

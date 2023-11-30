@@ -116,82 +116,91 @@ export class ProfilepetugasController {
     }
 
     @Put('/edit')
-    @UseInterceptors(FileInterceptor('foto'))
-    async updateUploud(
-        @Res() Response,
-        @Param('id') uploudId: string,
-        @Body() createProfilepetugasDto: CreateProfilepetugasDto,
-        @UploadedFile() uploadeddFile: Express.Multer.File,
-        @Headers() headers: Record<string, string>,
-    ) {
-        try {
-            const { id_user } = await this.authService.getUserFromToken(headers['authorization'].split(' ')[1]);
-            if (!id_user) {
-                return Response.status(HttpStatus.UNAUTHORIZED).json({
-                    message: 'Token tidak valid',
-                });
-            }
-            const uploudData = await this.profilepetugasService.getProfileByIdAuth(id_user);
-            if (uploadeddFile) {
-                await this.profilepetugasService.deleteFile('pengaduan.profile', uploudData.foto);
-                const {
-		            namabadan,
-                    nama,
-		            notelpon,
-                    email,
-                    alamat
-                } = createProfilepetugasDto;
-                const file = uploadeddFile.originalname;
-                const uniqueCode = randomBytes(5).toString('hex');
-                const namefilee = `${uniqueCode}-${uploadeddFile.originalname}`;
-                const updatedUploud = await this.profilepetugasService.updateUploud(
-                    uploudData._id,
-		            namabadan,
-                    nama.replace(/\b\w/g, (char) => char.toUpperCase()),
-                    notelpon,
-                    email,
-                    alamat,
-                    namefilee
-                );
-                const stream = require('stream');
-                const readableStream = new stream.PassThrough();
-                readableStream.end(uploadeddFile.buffer);
-                const objectName = namefilee;
-                await this.profilepetugasService.uploadFile('pengaduan.profile', objectName, readableStream, uploadeddFile.mimetype);
-                return Response.status(HttpStatus.OK).json({
-                    message: 'Profil petugas berhasil diperbarui',
-                    updatedUploud
-                });
-
-            } else {
-                const {
-		            namabadan,
-                    nama,
-                    notelpon,
-                    email,
-                    alamat
-                } = createProfilepetugasDto;
-                const updatedUploud = await this.profilepetugasService.updateUploud(
-                    uploudData._id,
-		            namabadan,
-                    nama.replace(/\b\w/g, (char) => char.toUpperCase()),
-                    notelpon,
-                    email,
-                    alamat,
-                    uploudData.foto
-                );
-
-                return Response.status(HttpStatus.OK).json({
-                    message: 'Profil petugas berhasil diperbarui (tanpa perubahan gambar)',
-                    updatedUploud
-                });
-            }
-        } catch (err) {
-            return Response.status(err.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
-                message: 'Terjadi kesalahan saat memperbarui profil petugas'
+@UseInterceptors(FileInterceptor('foto'))
+async updateUploud(
+    @Res() Response,
+    @Param('id') uploudId: string,
+    @Body() createProfilepetugasDto: CreateProfilepetugasDto,
+    @UploadedFile() uploadedFile: Express.Multer.File,
+    @Headers() headers: Record<string, string>,
+) {
+    try {
+        const { id_user } = await this.authService.getUserFromToken(headers['authorization'].split(' ')[1]);
+        if (!id_user) {
+            return Response.status(HttpStatus.UNAUTHORIZED).json({
+                message: 'Token tidak valid',
             });
         }
+        const uploudData = await this.profilepetugasService.getProfileByIdAuth(id_user);
+
+        if (uploadedFile) {
+            await this.profilepetugasService.deleteFile('pengaduan.profile', uploudData.foto);
+
+            const {
+                namabadan,
+                nama,
+                notelpon,
+                email,
+                alamat
+            } = createProfilepetugasDto;
+
+            const uniqueCode = randomBytes(5).toString('hex');
+            const namefilee = `${uniqueCode}-${uploadedFile.originalname}`;
+
+            const updatedUploud = await this.profilepetugasService.updateUploud(
+                uploudData._id,
+                namabadan,
+                nama.replace(/\b\w/g, (char) => char.toUpperCase()),
+                notelpon,
+                email,
+                alamat,
+                namefilee
+            );
+
+            const stream = require('stream');
+            const readableStream = new stream.PassThrough();
+            readableStream.end(uploadedFile.buffer);
+            const objectName = namefilee;
+
+            await this.profilepetugasService.uploadFile('pengaduan.profile', objectName, readableStream, uploadedFile.mimetype);
+
+            return Response.status(HttpStatus.OK).json({
+                message: 'Profil berhasil diperbarui',
+                updatedUploud
+            });
+
+        } else {
+            const {
+                namabadan,
+                nama,
+                notelpon,
+                email,
+                alamat
+            } = createProfilepetugasDto;
+
+            const updatedUploud = await this.profilepetugasService.updateUploud(
+                uploudData._id,
+                namabadan,
+                nama.replace(/\b\w/g, (char) => char.toUpperCase()),
+                notelpon,
+                email,
+                alamat,
+                uploudData.foto
+            );
+
+            return Response.status(HttpStatus.OK).json({
+                message: 'Profil berhasil diperbarui (tanpa perubahan gambar)',
+                updatedUploud
+            });
+        }
+    } catch (err) {
+        console.error(`Error saat memperbarui profil: ${err}`);
+        return Response.status(err.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
+            message: 'Terjadi kesalahan saat memperbarui profil'
+        });
     }
+}
+
 
     @Get('/get')
     async getProfileByIdAuth(@Headers() headers: Record<string, string>, @Param('id_user') id_user: string) {
