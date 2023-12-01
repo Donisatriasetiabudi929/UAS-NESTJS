@@ -109,7 +109,7 @@ export class PengaduanService {
     
 
     async getPengaduanByRole(jenis_pengaduan: string): Promise<IPengaduan[]> {
-        const pengaduans = await this.pengaduanModel.find({ jenis_pengaduan }).exec();
+        const pengaduans = await this.pengaduanModel.find({ jenis_pengaduan }).sort({ tanggal_pengaduan: -1 });
         return pengaduans;
     }
     

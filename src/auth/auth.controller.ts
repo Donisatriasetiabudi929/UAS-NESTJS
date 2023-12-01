@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Put, Res, Param, HttpStatus, UseGuards, Req, Delete } from '@nestjs/common';
+import { Controller, Post, Body, Get, Put, Res, Param, HttpStatus, UseGuards, Headers, Req, Delete, UnauthorizedException, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from 'src/dto/signup.dto';
 import { LoginDto } from 'src/dto/login.dto';
@@ -22,17 +22,17 @@ export class AuthController {
     }
 
     @Get('/all')
-async getUplouds(@Res() Response) {
-    try {
-        const userData = await this.authService.getAllUser();
-        return Response.status(HttpStatus.OK).json({
-            message: 'Semua data user berhasil ditemukan',
-            userData
-        });
-    } catch (err) {
-        return Response.status(err.status).json(err.Response);
+    async getUplouds(@Res() Response) {
+        try {
+            const userData = await this.authService.getAllUser();
+            return Response.status(HttpStatus.OK).json({
+                message: 'Semua data user berhasil ditemukan',
+                userData
+            });
+        } catch (err) {
+            return Response.status(err.status).json(err.Response);
+        }
     }
-}
 
 
     @Put('/:id')
@@ -76,6 +76,25 @@ async getUplouds(@Res() Response) {
             return Response.status(err.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
                 message: 'Terjadi kesalahan saat mengambil data user'
             });
+        }
+    }
+    @Get('/validasidata/user')
+    async getUserProfileFromToken(@Headers('authorization') authorization: string) {
+        try {
+            if (!authorization || !authorization.startsWith('Bearer ')) {
+                throw new UnauthorizedException('Invalid or missing token in the Authorization header');
+            }
+
+            const token = authorization.split('Bearer ')[1];
+            const user = await this.authService.getUserFromToken(token);
+
+            return {
+                statusCode: HttpStatus.OK,
+                message: 'User profile retrieved successfully',
+                user,
+            };
+        } catch (error) {
+            throw new UnauthorizedException('Invalid token or user not found');
         }
     }
 
